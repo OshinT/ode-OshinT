@@ -1,5 +1,7 @@
+import numpy as np
 
 def forward_euler2(a,b,d,g,t,t_max,Del_t,Hi,Li):
+    
     """
     Forward euler method for Lokta-Volterra Model 2 species
     Parameters for the model - a,b,d,g are aplha, beta, delta, gamma respectively.
@@ -8,6 +10,7 @@ def forward_euler2(a,b,d,g,t,t_max,Del_t,Hi,Li):
     Del_t: constant timestep
     Hi: initial hare population
     Li: initial lynx population
+    Returns lists of hare, lynx and time data
     """
     # Create lists to store data for plotting
     hare=[]
@@ -28,9 +31,8 @@ def forward_euler2(a,b,d,g,t,t_max,Del_t,Hi,Li):
     return (hare, lynx, time)
 
 
-
-
 def forward_euler3(a,b,d,g,ep,et,r,t,t_max,Del_t,Hi,Li,Wi):
+    
     """
     Forward euler method for Lokta-Volterra Model 3 species
     Parameters for the model - a,b,d,g,ep,et,r are aplha, beta, delta, gamma, epsilon, eta, rho respectively.
@@ -40,6 +42,7 @@ def forward_euler3(a,b,d,g,ep,et,r,t,t_max,Del_t,Hi,Li,Wi):
     Hi: initial hare population
     Li: initial lynx population
     Wi: initial wolf population
+    Returns lists of hare, lynx, wolf and time data
     """
     # Create lists to store data for plotting
     hare=[]
@@ -65,6 +68,7 @@ def forward_euler3(a,b,d,g,ep,et,r,t,t_max,Del_t,Hi,Li,Wi):
 
 
 def modforward_euler2(a,b,d,g,t,t_max,Del_t,Hi,Li):
+    
     """
     Modified forward euler method for Lokta-Volterra Model 2 species
     Parameters for the model - a,b,d,g are aplha, beta, delta, gamma respectively.
@@ -73,6 +77,7 @@ def modforward_euler2(a,b,d,g,t,t_max,Del_t,Hi,Li):
     Del_t: constant timestep
     Hi: initial hare population
     Li: initial lynx population
+    Returns lists of hare, lynx and time data
     """
     # Create lists to store data for plotting
     hare=[]
@@ -94,6 +99,7 @@ def modforward_euler2(a,b,d,g,t,t_max,Del_t,Hi,Li):
 
 
 def modforward_euler3(a,b,d,g,ep,et,r,t,t_max,Del_t,Hi,Li,Wi):
+    
     """
     Modified forward euler method for Lokta-Volterra Model 3 species
     Parameters for the model - a,b,d,g,ep,et,r are aplha, beta, delta, gamma, epsilon, eta, rho respectively.
@@ -103,6 +109,7 @@ def modforward_euler3(a,b,d,g,ep,et,r,t,t_max,Del_t,Hi,Li,Wi):
     Hi: initial hare population
     Li: initial lynx population
     Wi: initial wolf population
+    Returns lists of hare, lynx, wolf and time data
     """
     # Create lists to store data for plotting
     hare=[]
@@ -127,9 +134,14 @@ def modforward_euler3(a,b,d,g,ep,et,r,t,t_max,Del_t,Hi,Li,Wi):
     return (hare, lynx, wolf, time)
 
 
+
 def forward_euler(rhs, Xi, dt):
-    # This function takes in a rhs function (lorenz), a numpy array Xi (containing the values of X at time level i) and the timestep dt,
-    # and returns a numpy array Xip1, containing the values of X at time level i+1
+   
+    """
+    This function takes in a rhs function (lorenz), a numpy array Xi (containing the values of X at time level i) and the 
+    timestep dt,and applies the forward euler method.
+    Returns a numpy array Xip1, containing the values of X at time level i+1. 
+    """
     Xip1_x = Xi[0] + dt*rhs[0]
     Xip1_y = Xi[1] + dt*rhs[1]
     Xip1_z = Xi[2] + dt*rhs[2]
@@ -137,6 +149,13 @@ def forward_euler(rhs, Xi, dt):
     return (Xip1)
 
 def lorenz_fe(t,t_max,Xi,dt):
+   
+    """
+    This function takes a numpy array Xi (containing the values of X at time level i), the timestep dt and the total run time 
+    (t -> t_max) ,and applies the forward euler method to the lorenz value at Xi to get the integrated solution Xip1 
+    (X at time level i+1).
+    Returns a numpy array X of, containing the values of X at times t -> t_max. Also returns a numpy array of the times.
+    """
     #create lists
     X = Xi.copy()
     time = [0]
@@ -151,6 +170,11 @@ def lorenz_fe(t,t_max,Xi,dt):
     return(X,time)
 
 def lorenz_equation(t, X, s=10, r=28, b=8/3):
+   
+    """
+    Function calcualtes the values of dx/dt ,dy/dt and dz/dt for a value of X using the Lorenz equations.
+    Returns a numpy array of (dx/dt ,dy/dt, dz/dt)
+    """
     # note the optional arguments sigma, r and b that take default values
     x,y,z =X 
     dx=s*(y-x)
@@ -159,12 +183,16 @@ def lorenz_equation(t, X, s=10, r=28, b=8/3):
     return np.array([dx,dy,dz])
 
 
-def RK4(X, dt):
+def RK4(rhs,X, dt):
     
-    k1=lorenz(X)
-    k2=lorenz(X+0.5*dt*k1)
-    k3=lorenz(X+0.5*dt*k2)
-    k4=lorenz(X+dt*k3)
+    """
+    Applies the Runge-Kutta method of integration for a function 'rhs' of some value X at time t. 
+    Returns X_1 which is the value of X at time t+dt
+    """    
+    k1=rhs(X)
+    k2=rhs(X+0.5*dt*k1)
+    k3=rhs(X+0.5*dt*k2)
+    k4=rhs(X+dt*k3)
 
     X_1 = X+dt*(k1 + 2*k2 + 2*k3 + k4) / 6.0
 
@@ -172,15 +200,35 @@ def RK4(X, dt):
 
 
 def lorenz(X, s=10, r=28, b=8/3):
+   
+    """
+    Applies the Lorenz equations to a value X at time t.
+    Returns the Lorenz values of X, d_X
+    """
     d_x = s*(X[1]-X[0])
     d_y = -(X[0]*X[2]) + r*X[0]- X[1]
     d_z = X[0]*X[1]- b*X[2]
-    d_X=np.array([d_x,d_y,d_z])
+    d_X= np.array([d_x,d_y,d_z])
     return(d_X)
 
 
 
 def BredVectors(X0,Xp,t,dt,max_t,n):
+   
+    """
+    X0: control state
+    Xp: perturbed state
+    t: iitialising time
+    dt: timestep
+    max_t: max run time
+    n: number of timesteps
+    
+    Integrates the control and perturbed states using RK4 for intervals of 8 timesteps then evaluates the bredvectors and their 
+    growth rates. 
+    Returns np arrays of control simulation data (Xc), perturbed simulation data (Xper), bred vectors (bred), growth rates 
+    (growth), times each growth rate/ bred vector was calulated (growth_time), checking 8 timesteps were run when evaluating Xc 
+    and Xper (timesteps).
+    """
     Xn = X0
     Xpn = X0 + Xp
     bv= Xpn-X0
@@ -200,8 +248,8 @@ def BredVectors(X0,Xp,t,dt,max_t,n):
         #Run RK4 integration for n=8 timesteps 
         i=0
         while i < n*dt:     
-            Xn_p1 = RK4(X=Xn, dt=dt) 
-            Xpn_p1 = RK4(X=Xpn, dt=dt) 
+            Xn_p1 = RK4(rhs=lorenz, X=Xn, dt=dt) 
+            Xpn_p1 = RK4(rhs=lorenz, X=Xpn, dt=dt) 
             #update values
             Xn = Xn_p1 
             Xpn = Xpn_p1
