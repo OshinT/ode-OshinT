@@ -172,6 +172,7 @@ def lorenz_fe(t,t_max,Xi,dt):
 def lorenz_equation(t, X, s=10, r=28, b=8/3):
    
     """
+    Function used in SciPy.integrate 
     Function calcualtes the values of dx/dt ,dy/dt and dz/dt for a value of X using the Lorenz equations.
     Returns a numpy array of (dx/dt ,dy/dt, dz/dt)
     """
@@ -181,6 +182,22 @@ def lorenz_equation(t, X, s=10, r=28, b=8/3):
     dy=-(x*z) + r*x- y
     dz=x*y- b*z
     return np.array([dx,dy,dz])
+
+def varying_parameters_lorenz(s,r,b):
+    """
+    function which returns lorenz_equation with varied parameters set by s,r and b
+    """
+    
+    def lorenz_equation(t, X, s=s, r=r, b=b):
+
+        # note the optional arguments sigma, r and b that take default values
+        x,y,z =X 
+        dx=s*(y-x)
+        dy=-(x*z) + r*x- y
+        dz=x*y- b*z
+        return np.array([dx,dy,dz])
+    return lorenz_equation
+
 
 
 def RK4(rhs,X, dt):
@@ -203,7 +220,7 @@ def lorenz(X, s=10, r=28, b=8/3):
    
     """
     Applies the Lorenz equations to a value X at time t.
-    Returns the Lorenz values of X, d_X
+    Returns the Lorenz values of d_X
     """
     d_x = s*(X[1]-X[0])
     d_y = -(X[0]*X[2]) + r*X[0]- X[1]
@@ -218,7 +235,7 @@ def BredVectors(X0,Xp,t,dt,max_t,n):
     """
     X0: control state
     Xp: perturbed state
-    t: iitialising time
+    t: initialising time
     dt: timestep
     max_t: max run time
     n: number of timesteps
@@ -277,6 +294,54 @@ def BredVectors(X0,Xp,t,dt,max_t,n):
         Xpn = Xn_1 + b_r
         
     return(Xc, Xper, bred, growth, growth_time, timesteps)
+
+
+
+def lorenz_ENSO(X, sigma=10, r=28, b=8/3,S=1,c=1,o=-11, tao=0.1):
+    """
+    Applies the coupled Lorenz equations for ENSO to a value X at time t.
+    Returns the coupled Lorenz values of d_X
+    """
+    d_x1 = sigma*(X[1]-X[0]) - c*((S*X[3])+o)
+    d_y1 = r*X[0] - X[1] - X[0]*X[2] + c*((S*X[4])+o)
+    d_z1 = X[0]*X[1] - b*X[2] + c*X[5]
+    
+    d_x2 = tao*sigma*(X[4]-X[3]) - c*(X[0]+o) 
+    d_y2 = tao*r*X[3] - tao*X[4] - tao*S*X[3]*X[5] + c*(X[1]+o) 
+    d_z2 = tao*S*X[3]*X[4]- tao*b*X[5] -c*X[2] 
+
+    return(np.array([d_x1, d_y1, d_z1, d_x2, d_y2, d_z2]))
+
+def fast_and_slow_ENSO(Xn,t,dt,max_t,rhs=lorenz_ENSO):
+    """
+    Xn: coupled state
+    t: initialising time
+    dt: timestep
+    max_t: max run time
+    rhs: right hand side equation
+    
+    Integrates the coupled states using RK4 method for rhs= lorenz_ENSO 
+    Returns np arrays of coupled simulation data (X), times each integration was calulated (time)
+    """
+
+    # create a list to store the time and a numpy array to store X:
+    time = [0]
+    X = Xn.copy()  # create a copy of the initial conditions - without the copy, changing X will change X0
+
+    # Integrate the models
+    while t < max_t:
+
+        Xn_p1 = RK4(rhs=rhs,X=Xn, dt=dt) # update Xn_p1 using RK4 function
+        X = np.vstack((X, Xn_p1))
+        #update values
+        Xn = Xn_p1 
+        t += dt
+        time.append(t)
+    return (X,time)
+
+
+
+
 
 
 
